@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pickora Admin Dashboard</title>
+<style>
+:root{--navy:#17243a;--gold:#c5a66b;--cream:#f8f6f0;--sage:#788a79;--ink:#253044;--muted:#687386;--border:#e5e2da}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:22px 18px;border-bottom:4px solid var(--gold)}
+.wrap{max-width:1100px;margin:auto}
+.brand{font-size:25px;font-weight:800;letter-spacing:3px}.brand span{color:var(--gold)}
+.subtitle{font-size:13px;color:#d5dbe4;margin-top:5px}
+main{max-width:1100px;margin:24px auto;padding:0 15px 40px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 3px 12px #17243a0a}
+h2{font-size:19px;margin:0 0 13px}label{display:block;font-weight:700;font-size:13px;margin:13px 0 7px}
+input,textarea{width:100%;padding:12px;border:1px solid #d5d9df;border-radius:8px;font:inherit;font-size:14px;color:var(--ink);background:#fff}
+textarea{min-height:430px;resize:vertical;font-family:ui-monospace,SFMono-Regular,monospace;line-height:1.55}
+button{border:0;border-radius:8px;padding:12px 16px;margin:9px 5px 0 0;font-weight:700;font-size:14px;cursor:pointer}
+.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:var(--navy)}.secondary{background:#e9edf0;color:var(--navy)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.status{margin-top:12px;padding:11px;border-radius:8px;background:#f0f2f5;font-size:13px;overflow-wrap:anywhere}
+.status.success{background:#edf7ef;color:#286b39}.status.error{background:#fff0ed;color:#a33b28}
+.layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;align-items:start}
+.review-list{max-height:560px;overflow:auto;margin-top:12px}
+.review{padding:12px;border:1px solid var(--border);border-radius:8px;margin:8px 0;cursor:pointer;overflow-wrap:anywhere}
+.review.active,.review:hover{border-color:var(--gold);background:#fbf8f0}
+.review strong{font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:5px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.review-list{max-height:300px}textarea{min-height:380px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">PICK<span>ORA</span></div><div class="subtitle">Product Review Management Dashboard</div></div></header>
+<main>
+<section class="panel">
+<h2>GitHub Connection</h2>
+<p class="small">Connect to your original Pickora repository. Your token is held in this page's memory only; it is not saved in this file or browser storage.</p>
+<label for="token">GitHub fine-grained personal access token</label>
+<input id="token" type="password" autocomplete="off" placeholder="Paste your GitHub token">
+<div class="actions">
+<button class="primary" id="connectBtn">Connect &amp; Load Reviews</button>
+<button class="secondary" id="disconnectBtn">Disconnect</button>
+</div>
+<div id="status" class="status">Not connected.</div>
+</section>
+<div class="layout">
+<section class="panel">
+<h2>Your Reviews</h2>
+<input id="search" type="search" placeholder="Search review filenames...">
+<div class="actions">
+<button class="gold" id="newBtn">+ New Review</button>
+<button class="secondary" id="refreshBtn">Refresh</button>
+</div>
+<div id="reviewList" class="review-list"><p class="small">Connect to GitHub to load Markdown reviews.</p></div>
+</section>
+<section class="panel">
+<h2>Review Editor</h2>
+<p id="fileLabel" class="small">No review selected.</p>
+<label for="filename">Markdown filename</label>
+<input id="filename" placeholder="example-product-review.md">
+<div class="upload-box" style="padding:13px;border:1px dashed #c9c2b2;border-radius:9px;margin:15px 0;background:#fcfbf8">
+<strong>Product image upload</strong>
+<p class="small">Choose a JPG, PNG, or WebP image up to 5 MB. It will be uploaded to assets/images/reviews in your Pickora repository. Its path will be added to the review front matter.</p>
+<label for="imageFile">Choose product image</label>
+<input id="imageFile" type="file" accept="image/jpeg,image/png,image/webp">
+<button class="gold" id="uploadBtn" type="button">Upload Image to Pickora</button>
+<p class="small" id="imageStatus">No image selected.</p>
+</div>
+<label for="editor">Complete Markdown content</label>
+<textarea id="editor" spellcheck="false" placeholder="Paste or write the complete review Markdown, including its YAML front matter..."></textarea>
+<div class="actions">
+<button class="primary" id="saveBtn" disabled>Save Review to GitHub</button>
+<button class="secondary" id="clearBtn">Clear Editor</button>
+</div>
+<p class="small">Existing reviews are updated; new filenames create new review files. This dashboard does not delete files.</p>
+</section>
+</div>
+<section class="panel">
+<h2>Repository &amp; safety</h2>
+<p class="small">Target repository: <strong>Pickora169/Pickora</strong><br>Reviews folder: <strong>_reviews</strong><br>Image folder: <strong>assets/images/reviews</strong><br>Branch: <strong>feature/admin-dashboard-mvp</strong></p>
+<p class="small">Changes are saved to the development branch, not your live website's main branch. Review and merge approved changes into main when ready to publish.</p>
+<p class="small"><strong>Security:</strong> This is a public webpage, not a private login-protected admin portal. Never put your token in the source code, commit it to GitHub, or share it. Only enter a token on a copy of this page whose code you trust. Use a fine-grained token limited to the Pickora repository, with Contents read/write and Metadata read-only.</p>
+</section>
+</main>
+<script>
+"use strict";
+const OWNER="Pickora169";
+const REPO="Pickora";
+const BRANCH="feature/admin-dashboard-mvp";
+const FOLDER="_reviews";
+let token="";
+let files=[];
+let selectedName="";
+let selectedSha="";
+let isNew=false;
+const $=id=>document.getElementById(id);
+function setStatus(message,type=""){ $("status").textContent=message; $("status").className="status "+type; }
+function headers(){return {"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28"};}
+async function api(url,options={}){
+  const response=await fetch(url,{...options,headers:{...headers(),...(options.headers||{})}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok) throw new Error(data.message||("GitHub API error "+response.status));
+  return data;
+}
+function folderUrl(){return `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}?ref=${encodeURIComponent(BRANCH)}`;}
+function fileUrl(name){return `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}/${encodeURIComponent(name)}?ref=${encodeURIComponent(BRANCH)}`;}
+function encodeBase64Utf8(value){return btoa(unescape(encodeURIComponent(value)));}
+function decodeBase64Utf8(value){return decodeURIComponent(escape(atob(value.replace(/\n/g,""))));}
+async function connect(){
+  const entered=$("token").value.trim();
+  if(!entered){setStatus("Please paste your GitHub token.","error");return;}
+  token=entered;$("connectBtn").disabled=true;setStatus("Checking GitHub connection...");
+  try{
+    await api(`https://api.github.com/repos/${OWNER}/${REPO}`);
+    setStatus("Connected. Loading review files...");
+    await loadReviews();
+  }catch(error){
+    token="";$("token").value="";
+    setStatus("Connection failed: "+error.message,"error");
+  }finally{$("connectBtn").disabled=false;}
+}
+async function loadReviews(){
+  if(!token){setStatus("Connect to GitHub first.","error");return;}
+  setStatus("Loading files from _reviews...");
+  try{
+    const data=await api(folderUrl());
+    files=Array.isArray(data)?data.filter(item=>item.type==="file"&&item.name.toLowerCase().endsWith(".md")):[];
+    renderReviews();
+    setStatus(`${files.length} Markdown review file(s) found.`, "success");
+  }catch(error){
+    files=[];renderReviews();setStatus("Could not load reviews: "+error.message,"error");
+  }
+}
+function renderReviews(){
+  const list=$("reviewList");list.innerHTML="";
+  const query=$("search").value.trim().toLowerCase();
+  const shown=files.filter(file=>file.name.toLowerCase().includes(query));
+  if(!shown.length){list.innerHTML='<p class="small">No matching Markdown files found.</p>';return;}
+  shown.forEach(file=>{
+    const item=document.createElement("div");
+    item.className="review"+(file.name===selectedName?" active":"");
+    const title=document.createElement("strong");title.textContent=file.name;
+    item.appendChild(title);
+    item.addEventListener("click",()=>openReview(file));
+    list.appendChild(item);
+  });
+}
+async function openReview(file){
+  if(!token)return;
+  setStatus("Opening "+file.name+"...");
+  try{
+    const data=await api(fileUrl(file.name));
+    $("filename").value=file.name;
+    $("editor").value=decodeBase64Utf8(data.content||"");
+    selectedName=file.name;selectedSha=data.sha;isNew=false;
+    $("fileLabel").textContent="Editing: "+file.name;
+    $("saveBtn").disabled=false;
+    renderReviews();setStatus("Review loaded. Edit it and tap Save Review when ready.","success");
+  }catch(error){setStatus("Could not open file: "+error.message,"error");}
+}
+function newReview(){
+  selectedName="";selectedSha="";isNew=true;
+  $("filename").value="";
+  $("editor").value="---\ntitle: \"\"\ncategory: \"\"\nreview_type: research-based\nauthor: Pickora\ndate: "+new Date().toISOString().slice(0,10)+"\nexcerpt: \"\"\nverdict: \"\"\n---\n\nWrite your review here.\n";
+  $("fileLabel").textContent="New review — not saved yet.";
+  $("saveBtn").disabled=!token;
+  renderReviews();
+}
+async function uploadImage(){
+  if(!token){$("imageStatus").textContent="Connect to GitHub first.";return;}
+  const file=$("imageFile").files[0];
+  if(!file){$("imageStatus").textContent="Choose an image first.";return;}
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+    $("imageStatus").textContent="Choose a JPG, PNG, or WebP image.";return;
+  }
+  if(file.size>5*1024*1024){
+    $("imageStatus").textContent="Image is larger than 5 MB. Choose a smaller image.";return;
+  }
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]+/g,"-");
+  const filename=Date.now()+"-"+safeName;
+  const path="assets/images/reviews/"+filename;
+  $("uploadBtn").disabled=true;
+  $("imageStatus").textContent="Uploading image...";
+  try{
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=()=>reject(new Error("Could not read image."));
+      reader.readAsDataURL(file);
+    });
+    const base64=String(dataUrl).split(",")[1];
+    const url="https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+path.split("/").map(encodeURIComponent).join("/");
+    await api(url,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        message:"Upload review image "+filename,
+        content:base64,
+        branch:BRANCH
+      })
+    });
+    const imagePath="/assets/images/reviews/"+filename;
+    const editor=$("editor");
+    const frontmatter=editor.value.match(/^---\\r?\\n([\\s\\S]*?)\\r?\\n---/);
+    if(frontmatter){
+      let yaml=frontmatter[1];
+      if(/^image\\s*:/m.test(yaml)) yaml=yaml.replace(/^image\\s*:.*$/m,'image: "'+imagePath+'"');
+      else yaml+='\\nimage: "'+imagePath+'"';
+      editor.value=editor.value.replace(frontmatter[0],"---\\n"+yaml+"\\n---");
+    }else{
+      editor.value='---\\nimage: "'+imagePath+'"\\n---\\n\\n'+editor.value;
+    }
+    $("imageStatus").textContent="Uploaded. Image path added to review: "+imagePath;
+    setStatus("Image uploaded to the development branch. Save the review to keep the image field.","success");
+  }catch(error){
+    $("imageStatus").textContent="Upload failed: "+error.message;
+    setStatus("Image upload failed: "+error.message,"error");
+  }finally{$("uploadBtn").disabled=false;}
+}
+
+async function saveReview(){
+  if(!token){setStatus("Connect to GitHub before saving.","error");return;}
+  let name=$("filename").value.trim();
+  const content=$("editor").value;
+  if(!name){setStatus("Enter a filename ending in .md.","error");return;}
+  if(!/^[a-zA-Z0-9._-]+\.md$/i.test(name)){setStatus("Use a simple filename with letters, numbers, dots, underscores or hyphens, ending in .md.","error");return;}
+  if(!content.trim()){setStatus("Review content cannot be empty.","error");return;}
+  const existing=files.find(f=>f.name===name);
+  if(!isNew&&selectedName&&name===selectedName){} 
+  else if(existing){setStatus("That filename already exists. Open it from the list to edit it.","error");return;}
+  const body={message:(isNew?"Add ":"Update ")+name,content:encodeBase64Utf8(content),branch:BRANCH};
+  if(!isNew&&selectedSha&&name===selectedName)body.sha=selectedSha;
+  $("saveBtn").disabled=true;setStatus("Saving review to GitHub...");
+  try{
+    const url=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}/${encodeURIComponent(name)}`;
+    const result=await api(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    selectedName=name;selectedSha=result.content.sha;isNew=false;
+    $("fileLabel").textContent="Saved: "+name;
+    await loadReviews();
+    setStatus("Saved successfully to branch "+BRANCH+".","success");
+  }catch(error){setStatus("Save failed: "+error.message,"error");}
+  finally{$("saveBtn").disabled=!token;}
+}
+function disconnect(){
+  token="";files=[];selectedName="";selectedSha="";isNew=false;
+  $("token").value="";$("filename").value="";$("editor").value="";
+  $("fileLabel").textContent="No review selected.";
+  $("saveBtn").disabled=true;renderReviews();setStatus("Disconnected.");
+}
+$("connectBtn").addEventListener("click",connect);
+$("disconnectBtn").addEventListener("click",disconnect);
+$("refreshBtn").addEventListener("click",loadReviews);
+$("newBtn").addEventListener("click",newReview);
+$("clearBtn").addEventListener("click",()=>{$("filename").value="";$("editor").value="";});
+$("saveBtn").addEventListener("click",saveReview);
+$("uploadBtn").addEventListener("click",uploadImage);
+$("search").addEventListener("input",renderReviews);
+</script>
+</body>
+</html>
