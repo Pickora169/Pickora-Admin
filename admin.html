@@ -159,6 +159,7 @@ async function openReview(file){
     selectedName=file.name;selectedSha=data.sha;isNew=false;
     $("fileLabel").textContent="Editing: "+file.name;
     $("saveBtn").disabled=false;
+    $("deleteBtn").disabled=false;
     renderReviews();setStatus("Review loaded. Edit it and tap Save Review when ready.","success");
   }catch(error){setStatus("Could not open file: "+error.message,"error");}
 }
