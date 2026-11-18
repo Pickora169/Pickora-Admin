@@ -245,6 +245,46 @@ async function saveReview(){
   }catch(error){setStatus("Save failed: "+error.message,"error");}
   finally{$("saveBtn").disabled=!token;}
 }
+  async function deleteReview(){
+  if(!token || !selectedName || !selectedSha || isNew){
+    setStatus("Open an existing saved review first.","error");
+    return;
+  }
+
+  const name = selectedName;
+
+  if(!confirm('Are you sure you want to delete '+name+'?')) return;
+
+  $("deleteBtn").disabled = true;
+  setStatus("Deleting review...");
+
+  try{
+    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}/${encodeURIComponent(name)}`;
+
+    await api(url,{
+      method:"DELETE",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        message:"Delete review "+name,
+        sha:selectedSha,
+        branch:BRANCH
+      })
+    });
+
+    selectedName="";
+    selectedSha="";
+    isNew=false;
+    $("filename").value="";
+    $("editor").value="";
+    $("fileLabel").textContent="No review selected.";
+
+    await loadReviews();
+    setStatus("Review deleted successfully.","success");
+
+  }catch(error){
+    setStatus("Delete failed: "+error.message,"error");
+  }
+}
 function disconnect(){
   token="";files=[];selectedName="";selectedSha="";isNew=false;
   $("token").value="";$("filename").value="";$("editor").value="";
