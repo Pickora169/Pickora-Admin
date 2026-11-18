@@ -301,7 +301,27 @@ $("clearBtn").addEventListener("click",()=>{$("filename").value="";$("editor").v
 $("saveBtn").addEventListener("click",saveReview); 
 $("deleteBtn").addEventListener("click",deleteReview);
 $("uploadBtn").addEventListener("click",uploadImage);
-$("search").addEventListener("input",renderReviews);
+$("imageFile").addEventListener("change",function(){
+  const file=this.files[0];
+  const preview=$("imagePreview");
+
+  if(!file){
+    preview.style.display="none";
+    preview.removeAttribute("src");
+    return;
+  }
+
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+    preview.style.display="none";
+    $("imageStatus").textContent="Please choose JPG, PNG or WebP.";
+    return;
+  }
+
+  preview.src=URL.createObjectURL(file);
+  preview.style.display="block";
+  $("imageStatus").textContent="Image preview ready. Upload when satisfied.";
+});
+  $("search").addEventListener("input",renderReviews);
 </script>
 </body>
 </html>
