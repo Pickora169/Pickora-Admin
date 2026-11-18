@@ -295,6 +295,79 @@ async function saveReview(){
     setStatus("Delete failed: "+error.message,"error");
   }
 }
+  function escapePreviewHTML(text){
+  return String(text).replace(/[&<>"']/g,function(char){
+    return {
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[char];
+  });
+}
+
+function previewReview(){
+  const raw=$("editor").value.trim();
+  const parts=raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
+
+  if(!parts){
+    alert("Please enter valid review content with YAML front matter.");
+    return;
+  }
+
+  const yaml=parts[1];
+  const markdown=parts[2];
+
+  function field(name){
+    const match=yaml.match(new RegExp("^"+name+":\\s*[\"']?(.+?)[\"']?\\s*$","m"));
+    return match ? match[1] : "";
+  }
+
+  const title=escapePreviewHTML(field("title"));
+  const category=escapePreviewHTML(field("category"));
+  const excerpt=escapePreviewHTML(field("excerpt"));
+  const verdict=escapePreviewHTML(field("verdict"));
+  const bestFor=escapePreviewHTML(field("best_for"));
+
+  function formatMarkdown(text){
+    return escapePreviewHTML(text)
+      .replace(/^### (.*)$/gm,"<h3>$1</h3>")
+      .replace(/^## (.*)$/gm,"<h2>$1</h2>")
+      .replace(/^# (.*)$/gm,"<h1>$1</h1>")
+      .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g,"<em>$1</em>")
+      .replace(/`(.*?)`/g,"<code>$1</code>")
+      .replace(/^- (.*)$/gm,"<li>$1</li>")
+      .replace(/(<li>.*<\/li>\n?)+/g,"<ul>$&</ul>")
+      .split(/\n{2,}/)
+      .map(block=>block.startsWith("<h")||block.startsWith("<ul>")
+        ? block
+        : "<p>"+block.replace(/\n/g,"<br>")+"</p>")
+      .join("");
+  }
+
+  const image=field("image").replace(/^["']|["']$/g,"");
+  let imageHTML="";
+
+  if(image.startsWith("/assets/images/reviews/")){
+    const filename=image.split("/").pop();
+    imageHTML='<img src="https://raw.githubusercontent.com/Pickora169/Pickora/feature/admin-dashboard-mvp/assets/images/reviews/'+encodeURIComponent(filename)+'" style="max-width:100%;border-radius:12px;margin:12px 0;">';
+  }
+
+  $("previewContent").innerHTML=
+    '<div style="font-family:Arial,sans-serif;color:#252525;">'+
+    '<p style="color:#9b792e;">'+category+'</p>'+
+    '<h1>'+title+'</h1>'+
+    imageHTML+
+    '<p>'+excerpt+'</p>'+
+    '<h2>Our Verdict</h2><p>'+verdict+'</p>'+
+    '<p><strong>Best for:</strong> '+bestFor+'</p>'+
+    '<hr><div>'+formatMarkdown(markdown)+'</div></div>';
+
+  $("reviewPreview").style.display="block";
+  $("reviewPreview").scrollIntoView({behavior:"smooth"});
+}
 function disconnect(){
   token="";files=[];selectedName="";selectedSha="";isNew=false;
   $("token").value="";$("filename").value="";$("editor").value="";
