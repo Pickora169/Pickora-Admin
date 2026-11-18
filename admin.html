@@ -354,7 +354,7 @@ function previewReview(){
     const filename=image.split("/").pop();
     imageHTML='<img src="https://raw.githubusercontent.com/Pickora169/Pickora/feature/admin-dashboard-mvp/assets/images/reviews/'+encodeURIComponent(filename)+'" style="max-width:100%;border-radius:12px;margin:12px 0;">';
   }
-
+console.log("Preview content:", raw);
   $("previewContent").innerHTML=
     '<div style="font-family:Arial,sans-serif;color:#252525;">'+
     '<p style="color:#9b792e;">'+category+'</p>'+
