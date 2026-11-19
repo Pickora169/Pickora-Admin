@@ -388,15 +388,18 @@ $("clearBtn").addEventListener("click",()=>{$("filename").value="";$("editor").v
 $("saveBtn").addEventListener("click",saveReview); 
 $("previewBtn").addEventListener("click",previewReview);
   $("websitePreviewBtn").addEventListener("click",function(){
-  const file=$("reviewSelect").value;
+  const file=$("filename").value.trim();
 
   if(!file){
-    alert("Please select a review first.");
+    alert("Please open or select a review first.");
     return;
   }
 
-  const slug=file.replace(/^.*\//,"").replace(/\.md$/,"");
-  window.open("https://pickora169.github.io/Pickora/reviews/"+slug+"/","_blank");
+  const slug=file.replace(/\.md$/i,"");
+
+  const url="https://pickora169.github.io/Pickora/reviews/"+encodeURIComponent(slug)+"/";
+
+  window.open(url,"_blank");
 });
 $("deleteBtn").addEventListener("click",deleteReview);
 $("uploadBtn").addEventListener("click",uploadImage);
