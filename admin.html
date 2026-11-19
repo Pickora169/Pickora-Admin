@@ -363,7 +363,7 @@ console.log("Preview content:", raw);
     '<p>'+excerpt+'</p>'+
     '<h2>Our Verdict</h2><p>'+verdict+'</p>'+
     '<p><strong>Best for:</strong> '+bestFor+'</p>'+
-    '<hr><div>'+formatMarkdown(markdown)+'</div></div>';
+    '<hr><div>'+formatMarkdown(markdown.replace(/^\s*#\s+.*(?:\n|$)/, ""))+'</div></div>';
 
   $("reviewPreview").style.display="block";
   $("reviewPreview").scrollIntoView({behavior:"smooth"});
