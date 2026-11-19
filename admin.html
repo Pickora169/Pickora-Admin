@@ -356,14 +356,19 @@ function previewReview(){
   }
 console.log("Preview content:", raw);
   $("previewContent").innerHTML=
-    '<div style="font-family:Arial,sans-serif;color:#252525;">'+
-    '<p style="color:#9b792e;">'+category+'</p>'+
-    '<h1>'+title+'</h1>'+
-    imageHTML+
-    '<p>'+excerpt+'</p>'+
-    '<h2>Our Verdict</h2><p>'+verdict+'</p>'+
-    '<p><strong>Best for:</strong> '+bestFor+'</p>'+
-    '<hr><div>'+formatMarkdown(markdown.replace(/^\s*#\s+.*(?:\n|$)/, ""))+'</div></div>';
+  '<div style="font-family:Arial,sans-serif;color:#17243b;background:#fffdf7;padding:22px;border-radius:12px;line-height:1.7;">'+
+  '<p style="color:#a78335;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">'+category+'</p>'+
+  '<h1 style="color:#17243b;font-size:28px;line-height:1.3;margin:10px 0;">'+title+'</h1>'+
+  imageHTML+
+  '<p style="color:#625f58;font-size:16px;">'+excerpt+'</p>'+
+  '<div style="border-left:4px solid #b18a3b;padding:12px 16px;background:#f5f0e4;margin:20px 0;">'+
+  '<strong style="color:#17243b;">Our Verdict</strong><p>'+verdict+'</p></div>'+
+  '<p><strong style="color:#17243b;">Best for:</strong> '+bestFor+'</p>'+
+  '<hr style="border:0;border-top:1px solid #e5dfd1;margin:24px 0;">'+
+  '<div style="color:#333;">'+formatMarkdown(markdown.replace(/^\s*#\s+.*(?:\n|$)/, ""))+'</div>'+
+  '</div>';
+
+$("reviewPreview").style.background="#f1eee5";
 
   $("reviewPreview").style.display="block";
   $("reviewPreview").scrollIntoView({behavior:"smooth"});
